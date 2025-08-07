@@ -41,16 +41,17 @@ class op:
         """
         看情况补个刀，队伍不稳定时用。稳定时别用，拖速度
         """
+        sleep(10)
         try:
             wait(Template(r"common/攻击.jpeg", threshold=0.8,
                  rgb=True), timeout=timeout, interval=1)
             logger.debug("补刀")
-            op.attack(2, 1, 2, 4, 2, 5, 0)
-            sleep(5)
-            touch([10, 300])
-            sleep(5)
+            op.attack(2, 1, 2, 4, 2, 5)
+            op.finalAttack(timeout)
+            # touch([10, 300])
+            # sleep(5)
         except TargetNotFoundError:
-            pass
+            logger.debug('无需补刀')
 
     def chooseFriend(friend):
         """
@@ -91,10 +92,10 @@ class op:
         svt: （可选）单体技能给别人的位置，取值 1-3
         """
         touch(iphone.skillChoose[servant - 1][skill - 1])
-        touch(iphone.skillConfirmBtn)
+        # touch(iphone.skillConfirmBtn)
         if svt != -1:
             touch(iphone.skillSvtPos[svt - 1])
-        touch([1162, 361])
+        touch([1800, 500])
         sleep(delay)
 
     def masterSkillChoose(num: int, svt=-1, delay=1.3):
@@ -116,28 +117,44 @@ class op:
         """
         换人服的从者位置，svt1, svt2 为从者位置，取值 1-6，且不可为相同数字
         """
-        touch(iphone.orderPos[svt1 - 1], 587)
-        touch(iphone.orderPos[svt2 - 1], 587)
+        touch(iphone.orderPos[svt1 - 1])
+        touch(iphone.orderPos[svt2 - 1])
         touch(iphone.orderPosConfirm)  # 进行更替
         touch([10, 300])
         sleep(delay)
 
-    def ending(eatApple):
-        wait(
-            Template(  # 现在改名叫牵绊了，反正能用，将就了
-                r"common/与从者的羁绊.png", record_pos=(-0.351, -0.136), resolution=(2208, 1242)
-            ),
-            timeout=45,
-            interval=1,
-        )
-        touch([100, 10])
+    def ending(eatApple, touchnext=1):
+        logger.debug('等待羁绊页')
+        try:
+            wait(
+                Template(
+                    r"common/与从者的羁绊.png", record_pos=(-0.351, -0.136), resolution=(2436, 1125)
+                ),
+                timeout=180,
+                interval=1,
+            )
+        except:
+            logger.debug('等待经验页')
+            try:
+                wait(
+                    Template(
+                        r"common/经验.png", record_pos=(-0.351, -0.136), resolution=(2436, 1125)
+                    ),
+                    timeout=180,
+                    interval=1,
+                )
+            except:
+                logger.error('没有找到有效元素，退出')
+                raise Exception('没有找到有效元素，退出')
+        touch([100, 290])
         sleep(1)
-        touch([100, 10])
+        touch([100, 290])
         sleep(1)
-        touch([100, 10])
+        touch([100, 290])
         sleep(1)  # 防止意外情况，升级什么的
-        touch(iphone.nextBtn)
-        sleep(1)
+        for _ in range(touchnext):
+            touch(iphone.nextBtn)
+            sleep(1)
         touch(iphone.closeFrd)
         sleep(.5)
         touch(iphone.continueBattleBtn)
@@ -169,6 +186,18 @@ class op:
         if coor:
             touch(coor)
 
+    def clickAttack():
+        touch(iphone.attackBtn)
+        sleep(3)
+
+    def clickImage(image: str):
+        logger.debug('寻找图像：' + image)
+        try:
+            coor = wait(Template('teams/assets/' + image, threshold=0.7, rgb=True), timeout=20, interval=1)
+            logger.debug('找到坐标 %s,%s' % coor)
+            touch(coor)
+        except:
+            logger.debug('not found')
 
 def unlimited(round=5):
     """
@@ -202,3 +231,8 @@ def unlimited(round=5):
 
     stop_threads = True
     th_intrpt.join()
+
+def waitForReady(t=5):
+    wait(Template(r"common/ready.png", rgb=True), timeout=180, interval=1)
+    logger.debug(f'已就绪，等待{t}秒')
+    time.sleep(t)
