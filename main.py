@@ -5,10 +5,11 @@ from airtest.core.api import *
 from math import floor
 import sys
 import traceback
-
+import os
+import datetime
 from lib.actions import unlimited
-from teams.daily import *
-from teams.events import *
+import teams.daily
+import teams.events
 
 __author__ = "sansui233"
 
@@ -26,7 +27,12 @@ def main():
         if sys.argv[1] == "-h":
             print("运行方式: python main.py 队伍名 运行次数")
             return
-        team = getattr(sys.modules[__name__], sys.argv[1])
+        try:
+            team = getattr(teams.daily, sys.argv[1])
+        except:
+            team = getattr(teams.events, sys.argv[1])
+
+        print(team.__doc__)
         if sys.argv[2].isdigit():
             wrapTimes(team)(int(sys.argv[2]))
         elif sys.argv[2] == "-a":  # 按苹果数消耗
@@ -109,8 +115,13 @@ def wrapTimes(team_func):
         while round <= times:
             logging.info("执行第 %d 轮", round)
             logging.info("剩余执行轮数: %d", times - round)
-            team_func(times - round)
-            round += 1
+            try:
+                team_func(times - round)
+                round += 1
+            except Exception as ex:
+                snapshot(datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '.png')
+                logging.error('碰到错误，退出：' + str(ex))
+                break
 
     return wrapped
 
