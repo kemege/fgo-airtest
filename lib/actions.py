@@ -1,15 +1,21 @@
 import logging
 from airtest.core.api import *
+from airtest.core.api import touch, sleep, exists, Template, wait, G
 from cv2 import threshold
 from threading import Thread
 from lib.iphone13_pro import iphone13p as iphone
 
 
-logger = logging.getLogger("actions")
-logger.setLevel(logging.INFO)
-logger.handlers[0].setFormatter(
-    logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s'))
+logger = logging.getLogger("action")
+logger.setLevel(logging.DEBUG)
+# logger.propagate = False
+# if not logger.hasHandlers():
+#     print('初始化logger handler')
+#     logger.addHandler(logging.StreamHandler())
+#     logger.handlers[0].setFormatter(
+#         logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s'))
 
+actionlogger = logging.getLogger("action")
 
 class op:
     """
