@@ -18,6 +18,10 @@ connect_device("iOS:///127.0.0.1:8100")
 
 def main():
     setLog()
+    if sys.platform == 'win32':
+        import win10toast
+        G.notifier = win10toast.ToastNotifier()
+
     try:
         if sys.argv[1] == "-h":
             print("运行方式: python main.py 队伍名 运行次数")
@@ -28,7 +32,7 @@ def main():
         elif sys.argv[2] == "-a":  # 按苹果数消耗
             apple = 1
             now = 139
-            apple = int(sys.argv[2])
+            apple = int(sys.argv[3])
             if len(sys.argv) == 4:
                 now = int(sys.argv[3])
             wrapTimes(team)(calcRound(apple, now))
@@ -40,13 +44,18 @@ def main():
         else:
             logging.error("参数错误")
     except Exception as err:
-        os.system(
-            """/usr/bin/osascript -e 'display notification with title \"程序异常退出\"' """
-        )
+        if sys.platform == 'macos':
+            os.system(
+                """/usr/bin/osascript -e 'display notification with title \"程序异常退出\"' """
+            )
+        elif sys.platform == 'win32':
+            # notifier = win10toast.ToastNotifier()
+            G.notifier.show_toast('FGO-Airtest', "异常退出 %s" % err, threaded=True, duration=5)
         logging.error("异常退出 %s" % err)
-        traceback.print_exc()
+        # traceback.print_exc(chain=False)
         exit(1)
-    #os.system("""/usr/bin/osascript -e 'display notification with title \"肝完了\"' """)
+    if sys.platform == 'macos':
+        os.system("""/usr/bin/osascript -e 'display notification with title \"肝完了\"' """)
     logging.info("肝完了")
 
 
