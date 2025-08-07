@@ -53,32 +53,65 @@ class op:
         except TargetNotFoundError:
             logger.debug('无需补刀')
 
-    def chooseFriend(friend):
+    def chooseFriend(friend, threshold=0.9):
         """
         助战选择，传入图片文件路径，或一个屏幕坐标，比如[1121,332]
         """
-        if not isinstance(friend, str):  # if not string,treate it as coordiante
+        # Refresh if no friend
+        while True:
+            try:
+                wait(Template('common/没有好友.png', threshold=0.7, rgb=True), timeout=5)
+                logger.debug('没找到好友，刷新中')
+                touch(iphone.refreshList)  # 列表刷新
+                sleep(1)
+                touch(iphone.refreshBtn)  # 是
+                sleep(8)
+            except:
+                break
+
+        if isinstance(friend, list) and isinstance(friend[0], int):  # if not string,treate it as coordiante
+            logger.debug('已根据坐标选择')
             touch(friend)
             sleep(1)
         else:
+            if isinstance(friend, list):
+                images = friend
+            else:
+                images = [friend]
+            
+            time_start = time.mktime(time.gmtime())
             swipe_count = 7
+            selected= False
             while True:
-                coor = exists(Template(friend, threshold=0.8, rgb=True))
-                if not coor:
-                    swipe([500, 900], [500, 500])
-                    swipe_count -= 1
-                else:  # Choose friend and break
-                    touch(coor)
-                    sleep(2.2)
+                for image in images:
+                    coor = exists(Template(image, threshold=threshold, rgb=True))
+                    if coor:
+                        touch(coor)
+                        selected = True
+                        logger.debug('已选择' + image)
+                        sleep(2.2)
+                        break
+                
+                if selected:
                     break
+                
+                logger.info('下滑列表...')
+                swipe([250, 900], [250, 550])
+                swipe_count -= 1
                 if swipe_count == 0:
+                    logger.info('刷新列表...')
                     touch(iphone.refreshList)  # 列表刷新
                     sleep(1)
                     touch(iphone.refreshBtn)  # 是
                     sleep(1)
                     swipe_count = 5
-            if swipe_count == -1:
-                return  # TODO 错误处理
+                if swipe_count == -1:
+                    return  # TODO 错误处理
+                
+                if time.mktime(time.gmtime()) - time_start > 5 * 60:
+                    G.notifier.show_toast('FGO-Airtest', "刷好友持续3分钟以上，检查状态是否正确", threaded=True, duration=5)
+                    time.sleep(6)
+            
         coor = exists(Template(r"common/开始任务.png", threshold=0.8))
         if coor:
             touch(coor)
