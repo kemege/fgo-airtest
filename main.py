@@ -26,6 +26,10 @@ def main():
     try:
         if sys.argv[1] == "-h":
             print("运行方式: python main.py 队伍名 运行次数")
+            print('teams/daily.py:\n')
+            print('\n'.join(dir(teams.daily)))
+            print('\nteams/events.py:\n')
+            print('\n'.join(dir(teams.events)))
             return
         try:
             team = getattr(teams.daily, sys.argv[1])
